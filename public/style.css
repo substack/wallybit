@@ -1,0 +1,30 @@
+body {
+  margin: 0px;
+  font-family: ubuntu, helvetica, sans-serif;
+}
+
+.tab {
+  padding: 0px;
+}
+
+.bar {
+  background-color: dimgrey;
+  color: white;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 20px;
+}
+
+.bar h1 {
+  display: inline-block;
+  margin-right: 30px;
+}
+
+.bar button {
+  padding: 5px;
+  min-width: 100px;
+  min-height: 40px;
+  margin-right: 10px;
+  margin-bottom: 5px;
+  vertical-align: middle;
+}

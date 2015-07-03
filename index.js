@@ -5,6 +5,7 @@ var EventEmitter = require('events').EventEmitter;
 var through = require('through2');
 var readonly = require('read-only-stream');
 var pump = require('pump');
+var once = require('once');
 
 var randomBytes = require('randombytes');
 function defaultRng () { return randomBytes(32) }
@@ -44,10 +45,11 @@ Box.prototype.createWallet = function (opts, cb) {
 };
 
 Box.prototype.listWallets = function (cb) {
-    var r = db.createReadStream({ gt: 'wallet!', lt: 'wallet!~' });
+    cb = once(cb);
+    var r = this.db.createReadStream({ gt: 'wallet!', lt: 'wallet!~' });
     var results = cb ? [] : null;
     
-    return readonly(pump(r, through.obj(function (row, enc, next) {
+    var stream = pump(r, through.obj(function (row, enc, next) {
         var rec = {
             address: row.key.split('!')[0],
             wif: row.value
@@ -55,5 +57,11 @@ Box.prototype.listWallets = function (cb) {
         if (results) results.push(rec);
         this.push(rec);
         next();
-    })));
+    }));
+    if (cb) {
+        stream.once('error', cb);
+        stream.on('end', function () { cb(null, results) });
+        process.nextTick(function () { stream.resume() });
+    }
+    return readonly(stream);
 };
