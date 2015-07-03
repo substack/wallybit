@@ -27,4 +27,43 @@ body {
   margin-right: 10px;
   margin-bottom: 5px;
   vertical-align: middle;
+  background-color: deeppink;
+  color: white;
+  font-weight: bold;
+  border-width: 0px;
+  border-radius: 10px;
+}
+
+.bar button:hover {
+  background-color: hotpink;
+}
+
+.page .buttons {
+  background-color: gainsboro;
+  padding: 10px;
+}
+
+.page .buttons button {
+  margin-left: 10px;
+  padding: 15px;
+  background-color: orangered;
+  color: white;
+  font-weight: bold;
+  border-width: 0px;
+  border-radius: 10px;
+}
+
+.page .buttons button:hover {
+  background-color: darkorange;
+}
+
+.page .buttons button:active {
+  background-color: magenta;
+}
+
+.wallet {
+  margin-left: 15px;
+  margin-top: 5px;
+  background-color: lime;
+  padding: 15px;
 }

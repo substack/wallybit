@@ -38,9 +38,11 @@ Box.prototype.createWallet = function (opts, cb) {
     
     var addr = keypair.getAddress().toString();
     var wif = keypair.toWIF();
+    var rec = { address: addr, wif: wif };
     
     this.db.put('wallet!' + addr, wif, function (err) {
-        cb(null, addr);
+        if (err) cb(err)
+        else cb(null, rec)
     });
 };
 
@@ -51,7 +53,7 @@ Box.prototype.listWallets = function (cb) {
     
     var stream = pump(r, through.obj(function (row, enc, next) {
         var rec = {
-            address: row.key.split('!')[0],
+            address: row.key.split('!')[1],
             wif: row.value
         };
         if (results) results.push(rec);

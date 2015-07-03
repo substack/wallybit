@@ -1,5 +1,5 @@
 {
-  "name": "wallybox",
+  "name": "wallybit",
   "version": "1.0.0",
   "description": "browser-based bitcoin wallet keyring",
   "main": "index.js",
@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/substack/wallybox.git"
+    "url": "git+ssh://git@github.com/substack/wallybit.git"
   },
   "keywords": [
     "bitcoin",
@@ -42,7 +42,7 @@
   "author": "substack",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/substack/wallybox/issues"
+    "url": "https://github.com/substack/wallybit/issues"
   },
-  "homepage": "https://github.com/substack/wallybox#readme"
+  "homepage": "https://github.com/substack/wallybit#readme"
 }

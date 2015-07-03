@@ -1,4 +1,4 @@
-# wallybox
+# wallybit
 
 browser-based bitcoin wallet keyring
 

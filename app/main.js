@@ -1,5 +1,6 @@
 var level = require('level-browserify');
 var db = level('wallybox');
+window.db = db;
 
 var Box = require('../');
 var box = new Box(db);
@@ -7,42 +8,32 @@ var box = new Box(db);
 var main = require('main-loop');
 var vdom = require('virtual-dom');
 
+var EventEmitter = require('events').EventEmitter;
+var bus = new EventEmitter;
+
+bus.on('create-wallet', function () {
+    box.createWallet(function (err, wallet) {
+        if (err) return showError(err);
+        state.wallets.push(wallet);
+        loop.update(state);
+    });
+});
+
 var state = {
     url: location.pathname,
     page: null,
+    bus: bus,
     wallets: []
 };
-var render = require('./render.js');
-var loop = main(state, render, vdom);
+var loop = main(state, require('./render.js'), vdom);
 document.querySelector('#content').appendChild(loop.target);
 
-var Router = require('routes');
-var router = new Router;
-var h = require('virtual-dom/h');
-
+var router = require('./router.js');
 var singlePage = require('single-page');
 var showPage = singlePage(function (href) {
-    var m = router.match(href);
-    if (m) {
-        state.page = m.fn({ state: state, params: m.params });
-        loop.update(state);
-    }
-    else location.href = href;
+    state.url = href;
+    loop.update(state);
 });
-
-router.addRoute('/', function (m) {
-    return h('div', m.state.wallets.map(function (wallet) {
-        return h('div.wallet', [
-            h('div.address', wallet.address),
-            h('div.wif', wallet.wif)
-        ]);
-    }));
-});
-
-router.addRoute('/settings', function (m) {
-    return h('div', 'settings todo');
-});
-
 var catcher = require('catch-links');
 catcher(window, showPage);
 
@@ -53,7 +44,12 @@ var rpc = RPC(window, window.parent, origin, {
 });
 
 box.listWallets(function (err, wallets) {
-    if (err) return showError();
+    if (err) return showError(err);
     state.wallets = wallets;
     loop.update(state);
 });
+
+function showError (err) {
+    state.error = err.message || String(err);
+    loop.update(state);
+}
