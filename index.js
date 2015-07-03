@@ -4,6 +4,7 @@ var inherits = require('inherits');
 var EventEmitter = require('events').EventEmitter;
 var through = require('through2');
 var readonly = require('read-only-stream');
+var pump = require('pump');
 
 var randomBytes = require('randombytes');
 function defaultRng () { return randomBytes(32) }
@@ -44,12 +45,15 @@ Box.prototype.createWallet = function (opts, cb) {
 
 Box.prototype.listWallets = function (cb) {
     var r = db.createReadStream({ gt: 'wallet!', lt: 'wallet!~' });
-    return readonly(r.pipe(through.obj(function (row, enc, next) {
-        this.push({
+    var results = cb ? [] : null;
+    
+    return readonly(pump(r, through.obj(function (row, enc, next) {
+        var rec = {
             address: row.key.split('!')[0],
             wif: row.value
-        });
+        };
+        if (results) results.push(rec);
+        this.push(rec);
         next();
     })));
 };
-
