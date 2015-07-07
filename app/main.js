@@ -19,20 +19,32 @@ ui.on('create-wallet', function () {
     });
 });
 
-ui.on('reject', function (origin) {
+ui.on('reject-origin', function (origin) {
     box.rejectRequest(origin, function (err) {
         if (err) return showError(err);
     });
 });
 
+ui.on('approve-origin', function (origin) {
+    box.approveRequest(origin, function (err) {
+        if (err) return showError(err);
+    });
+});
+
 box.on('request', function (origin, req) {
-console.log('REQUEST!!!!!', origin);
     state.requests.push(req);
     loop.update(state);
 });
 
+box.on('approve', function (origin, perms) {
+    state.requests = state.requests.filter(function (req) {
+        return req.origin !== origin;
+    });
+    state.approved.push({ origin: origin, permissions: perms });
+    loop.update(state);
+});
+
 box.on('reject', function (origin, req) {
-console.log('REJECT!!!!!', origin);
     state.requests = state.requests.filter(function (req) {
         return req.origin !== origin;
     });
@@ -44,7 +56,9 @@ var state = {
     page: null,
     bus: ui,
     wallets: [],
-    requests: []
+    requests: [],
+    approved: [],
+    blocked: []
 };
 var loop = main(state, require('./render.js'), vdom);
 document.querySelector('#content').appendChild(loop.target);
@@ -62,7 +76,6 @@ var hello = require('hello-frame-rpc');
 hello.listen('*', function (rpc) {
     var methods = {};
     methods.request = function (req, cb) {
-console.log('REQUEST', rpc.origin); 
         box.request(rpc.origin, req, cb);
     };
     return methods;

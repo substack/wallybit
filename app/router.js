@@ -13,10 +13,14 @@ router.addRoute('/', function (m) {
     var requests = m.state.requests.map(function (req) {
         return h('div.request', [
             h('span.origin', req.origin),
-            h('button', { onclick: reject }, 'reject')
+            h('button', { onclick: reject }, 'reject'),
+            h('button', { onclick: approve }, 'approve')
         ]);
         function reject (ev) {
-            m.bus.emit('reject', req.origin);
+            m.bus.emit('reject-origin', req.origin);
+        }
+        function approve (ev) {
+            m.bus.emit('approve-origin', req.origin);
         }
     });
     return h('div', [

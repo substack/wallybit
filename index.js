@@ -35,7 +35,7 @@ Box.prototype.request = function (origin, req, cb) {
     cb = once(cb || noop);
     var pending = 3, results = {};
     self.db.get('request!' + origin, onreq);
-    self.db.get('origin!' + origin, onorigin);
+    self.db.get('approved!' + origin, onorigin);
     self.db.get('block!' + origin, onblock);
     
     function onblock (err) {
@@ -54,13 +54,12 @@ Box.prototype.request = function (origin, req, cb) {
         if (-- pending === 0) done();
     }
     function done () {
-console.log('results=', results); 
         if (results.origin) return cb(null, results.origin)
         else if (results.block) return cb(null, false)
         self.db.put('request!' + origin, req, function (err) {
             if (err) return cb(err);
             cb(null);
-console.log('emit request', origin); 
+            req.origin = origin;
             self.emit('request', origin, req);
         });
     }
@@ -74,7 +73,7 @@ Box.prototype.approveRequest = function (origin, cb) {
         if (err) return cb(err);
         self.db.batch([
             { type: 'del', key: 'request!' + origin },
-            { type: 'put', key: 'origin!' + origin, value: perms }
+            { type: 'put', key: 'approved!' + origin, value: perms }
         ], onbatch);
         function onbatch (err) {
             if (err) return cb(err);
@@ -97,7 +96,7 @@ Box.prototype.rejectRequest = function (origin, cb) {
 Box.prototype.revokeOrigin = function (origin, cb) {
     var self = this;
     if (!cb) cb = noop;
-    self.db.del('origin!' + origin, function (err) {
+    self.db.del('approved!' + origin, function (err) {
         if (err) return cb(err);
         cb(null);
         self.emit('revoke', origin);
@@ -106,30 +105,9 @@ Box.prototype.revokeOrigin = function (origin, cb) {
 
 Box.prototype.blockOrigin = function (origin, cb) {
     var self = this;
-    self.db.put('block!' + origin, function (err) {
+    self.db.put('blocked!' + origin, {}, function (err) {
         cb(null);
     });
-};
-
-Box.prototype.listRequests = function (cb) {
-    cb = once(cb);
-    var r = this.db.createReadStream({ gt: 'request!', lt: 'request!~' });
-    var results = cb ? [] : null;
-    
-    var stream = pump(r, through.obj(function (row, enc, next) {
-        var rec = xtend(row.value, {
-            origin: row.key.split('!')[1],
-        });
-        if (results) results.push(rec);
-        this.push(rec);
-        next();
-    }));
-    if (cb) {
-        stream.once('error', cb);
-        stream.on('end', function () { cb(null, results) });
-        process.nextTick(function () { stream.resume() });
-    }
-    return readonly(stream);
 };
 
 Box.prototype.createWallet = function (opts, cb) {
@@ -161,14 +139,44 @@ Box.prototype.createWallet = function (opts, cb) {
 };
 
 Box.prototype.listWallets = function (cb) {
+    return this._list('wallet', function (row) {
+        return xtend(row.value, {
+            address: row.key.split('!')[1],
+        });
+    }, cb);
+};
+
+Box.prototype.listRequests = function (cb) {
+    return this._list('request', function (row) {
+        return xtend(row.value, {
+            origin: row.key.split('!')[1]
+        });
+    }, cb);
+};
+
+Box.prototype.listApproved = function (cb) {
+    return this._list('approved', function (row) {
+        return xtend(row.value, {
+            origin: row.key.split('!')[1]
+        });
+    }, cb);
+};
+
+Box.prototype.listBlocked = function (cb) {
+    return this._list('blocked', function (row) {
+        return xtend(row.value, {
+            origin: row.key.split('!')[1]
+        });
+    }, cb);
+};
+
+Box.prototype._list = function (key, fn, cb) {
     cb = once(cb);
-    var r = this.db.createReadStream({ gt: 'wallet!', lt: 'wallet!~' });
+    var r = this.db.createReadStream({ gt: key + '!', lt: key + '!~' });
     var results = cb ? [] : null;
     
     var stream = pump(r, through.obj(function (row, enc, next) {
-        var rec = xtend(row.value, {
-            address: row.key.split('!')[1],
-        });
+        var rec = fn(row);
         if (results) results.push(rec);
         this.push(rec);
         next();
