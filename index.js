@@ -9,7 +9,7 @@ var inherits = require('inherits');
 var PageBus = require('page-bus');
 var once = require('once');
 var xtend = require('xtend');
-var noop = require('noop');
+function noop () {}
 
 var defaults = require('levelup-defaults');
 
@@ -32,8 +32,7 @@ function Box (db, opts) {
 Box.prototype.request = function (origin, req, cb) {
     var self = this;
     origin = normOrigin(origin);
-    if (!cb) cb = noop;
-    cb = once(cb);
+    cb = once(cb || noop);
     var pending = 3, results = {};
     self.db.get('request!' + origin, onreq);
     self.db.get('origin!' + origin, onorigin);
@@ -55,11 +54,13 @@ Box.prototype.request = function (origin, req, cb) {
         if (-- pending === 0) done();
     }
     function done () {
+console.log('results=', results); 
         if (results.origin) return cb(null, results.origin)
         else if (results.block) return cb(null, false)
         self.db.put('request!' + origin, req, function (err) {
             if (err) return cb(err);
             cb(null);
+console.log('emit request', origin); 
             self.emit('request', origin, req);
         });
     }

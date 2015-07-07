@@ -19,8 +19,23 @@ ui.on('create-wallet', function () {
     });
 });
 
+ui.on('reject', function (origin) {
+    box.rejectRequest(origin, function (err) {
+        if (err) return showError(err);
+    });
+});
+
 box.on('request', function (origin, req) {
+console.log('REQUEST!!!!!', origin);
     state.requests.push(req);
+    loop.update(state);
+});
+
+box.on('reject', function (origin, req) {
+console.log('REJECT!!!!!', origin);
+    state.requests = state.requests.filter(function (req) {
+        return req.origin !== origin;
+    });
     loop.update(state);
 });
 
@@ -43,15 +58,14 @@ var showPage = singlePage(function (href) {
 var catcher = require('catch-links');
 catcher(window, showPage);
 
-var rpc = require('hello-frame-rpc');
-rpc.listen('*', {
-    request: function (cb) {
-        // ...
-        console.log('GOT REQUEST!');
-        cb(true);
-    }
-}, function (err, remote) {
-    console.log('remote client connected');
+var hello = require('hello-frame-rpc');
+hello.listen('*', function (rpc) {
+    var methods = {};
+    methods.request = function (req, cb) {
+console.log('REQUEST', rpc.origin); 
+        box.request(rpc.origin, req, cb);
+    };
+    return methods;
 });
 
 box.listWallets(function (err, wallets) {

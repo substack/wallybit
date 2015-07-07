@@ -10,12 +10,22 @@ router.addRoute('/', function (m) {
             h('div.address', wallet.address)
         ]);
     });
+    var requests = m.state.requests.map(function (req) {
+        return h('div.request', [
+            h('span.origin', req.origin),
+            h('button', { onclick: reject }, 'reject')
+        ]);
+        function reject (ev) {
+            m.bus.emit('reject', req.origin);
+        }
+    });
     return h('div', [
         h('div.buttons', [
             h('button', { onclick: createWallet }, 'create wallet'),
             h('button', 'import wallet')
         ]),
-        h('div.wallets', wallets)
+        h('div.wallets', wallets),
+        h('div.requests', requests)
     ]);
     
     function createWallet (ev) {
