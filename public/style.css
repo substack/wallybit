@@ -12,53 +12,92 @@ body {
   color: white;
   padding-top: 2px;
   padding-bottom: 2px;
-  padding-left: 20px;
+  padding-left: 15px;
 }
 
 .bar h1 {
   display: inline-block;
-  margin-right: 30px;
+  margin-right: 15px;
 }
 
 .bar button {
   padding: 5px;
-  min-width: 100px;
-  min-height: 40px;
+  min-width: 80px;
+  min-height: 45px;
   margin-right: 10px;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
   vertical-align: middle;
   background-color: deeppink;
   color: white;
   font-weight: bold;
   border-width: 0px;
   border-radius: 10px;
+  text-shadow: 0px 0px 4px mediumvioletred;
+}
+
+.bar button.active {
+  background-color: lime;
 }
 
 .bar button:hover {
   background-color: hotpink;
 }
 
-.page .buttons {
-  background-color: gainsboro;
-  padding: 10px;
+.bar button.active {
+  background-color: lime;
+  text-shadow: 0px 0px 4px green;
 }
 
-.page .buttons button {
+.page .bar {
+  display: flex;
+  align-items: center;
+  position: relative;
+  background-color: gainsboro;
+  color: deeppink;
+  padding: 10px;
+  padding-left: 40px;
+  margin-top: 0em;
+  border-left: 20px solid deeppink;
+  height: 36px;
+}
+
+.page .bar::before {
+  content: '';
+  border-bottom: 28px solid transparent;
+  border-top: 28px solid transparent;
+  border-left: 30px solid deeppink;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
+.page .bar button {
   margin-left: 10px;
-  padding: 15px;
-  background-color: orangered;
+  margin-top: -7px;
+  padding: 5px;
+  background-color: mediumpurple;
+  text-shadow: 0px 0px 4px royalblue;
   color: white;
   font-weight: bold;
   border-width: 0px;
   border-radius: 10px;
 }
 
-.page .buttons button:hover {
-  background-color: darkorange;
+.page .bar button:hover {
+  background-color: orchid;
 }
 
-.page .buttons button:active {
+.page .bar button:active {
   background-color: magenta;
+}
+
+.page .bar .buttons {
+  display: inline-block;
+  height: 1em;
+}
+
+.padded {
+  padding: 1em;
 }
 
 .wallet {
@@ -66,4 +105,14 @@ body {
   margin-top: 5px;
   background-color: lime;
   padding: 15px;
+}
+
+table.requests th {
+  text-align: left;
+}
+
+table.requests tr td.origin {
+  background-color: yellow;
+  min-width: 30ex;
+  padding-right: 4ex;
 }

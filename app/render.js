@@ -8,14 +8,19 @@ module.exports = function (state) {
         bus: state.bus,
         state: state
     });
-    
-    var bar = h('div.bar', [
-        h('h1', 'wallybit'),
-        h('a', { href: '/' }, [ h('button', 'wallets') ]),
-        h('a', { href: '/access' }, [ h('button', 'access') ]),
-        h('a', { href: '/settings' }, [ h('button', 'settings') ]),
-        h('a', { href: '/send' }, [ h('button', 'send') ])
-    ]);
+    var buttons = [
+        { href: '/', text: 'log' },
+        { href: '/wallets', text: 'wallets' },
+        { href: '/access', text: 'access' },
+        { href: '/send', text: 'send' },
+        { href: '/settings', text: 'settings' }
+    ];
+    var bar = h('div.bar', [ h('h1', 'wallybit') ]
+        .concat(buttons.map(function (b) {
+            var ex = state.url === b.href ? '.active' : '';
+            return h('a', { href: b.href }, [ h('button' + ex, b.text) ]);
+        }))
+    );
     return h('div', [
         bar,
         (state.error ? h('div.error', state.error) : ''),
