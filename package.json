@@ -6,6 +6,7 @@
   "dependencies": {
     "bitcoinjs-lib": "git@github.com:bitcoinjs/bitcoinjs-lib.git",
     "catch-links": "^2.0.0",
+    "common-blockchain": "^0.3.2",
     "defined": "^1.0.0",
     "frame-rpc": "^1.2.0",
     "hello-frame-rpc": "^1.0.2",
@@ -28,7 +29,9 @@
     "xtend": "^4.0.0"
   },
   "devDependencies": {
-    "tape": "^4.0.0"
+    "blockcypher-unofficial": "^1.5.0",
+    "tape": "^4.0.0",
+    "test-common-wallet": "^1.2.1"
   },
   "scripts": {
     "build": "browserify app/main.js -o public/bundle.js",

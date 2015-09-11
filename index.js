@@ -27,6 +27,7 @@ function Box (db, opts) {
     if (!opts) opts = {};
     this.rng = defined(opts.rng, defaultRng);
     this.db = defaults(db, { valueEncoding: 'json' });
+    this.network = defined(opts.network, bitcoin.networks.bitcoin)
 }
 
 Box.prototype.request = function (origin, req, cb) {
@@ -127,8 +128,8 @@ Box.prototype.createWallet = function (opts, cb) {
         });
     }
     
-    var addr = keypair.getAddress().toString();
-    var wif = keypair.toWIF();
+    var addr = keypair.getAddress(this.network).toString();
+    var wif = keypair.toWIF(this.network);
     var rec = { address: addr, wif: wif };
     var value = { wif: wif };
     
