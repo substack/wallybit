@@ -1,6 +1,14 @@
+var hyperlog = require('hyperlog');
+var hindex = require('hyperlog-index');
+
 var level = require('level-browserify');
 var db = level('wallybox');
-window.db = db;
+var idb = level('wallybox-index');
+
+var log = hyperlog(db);
+var dex = hindex(log, idb, function (row, tx, next) {
+    next();
+});
 
 var Box = require('../');
 var box = new Box(db);
@@ -9,9 +17,9 @@ var main = require('main-loop');
 var vdom = require('virtual-dom');
 
 var EventEmitter = require('events').EventEmitter;
-var ui = new EventEmitter;
+var bus = new EventEmitter;
 
-ui.on('create-wallet', function () {
+bus.on('create-wallet', function () {
     box.createWallet(function (err, wallet) {
         if (err) return showError(err);
         state.wallets.push(wallet);
@@ -19,13 +27,13 @@ ui.on('create-wallet', function () {
     });
 });
 
-ui.on('reject-origin', function (origin) {
+bus.on('reject-origin', function (origin) {
     box.rejectRequest(origin, function (err) {
         if (err) return showError(err);
     });
 });
 
-ui.on('approve-origin', function (origin) {
+bus.on('approve-origin', function (origin) {
     box.approveRequest(origin, function (err) {
         if (err) return showError(err);
     });
@@ -54,13 +62,15 @@ box.on('reject', function (origin, req) {
 var state = {
     url: location.pathname,
     page: null,
-    bus: ui,
     wallets: [],
     requests: [],
     approved: [],
     blocked: []
 };
-var loop = main(state, require('./render.js'), vdom);
+var render = require('./render.js')
+var loop = main(state, function (state) {
+  return render(state, bus.emit.bind(bus))
+}, vdom);
 document.querySelector('#content').appendChild(loop.target);
 
 var router = require('./router.js');

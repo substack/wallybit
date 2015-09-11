@@ -1,13 +1,12 @@
 var h = require('virtual-dom/h');
 var router = require('./router.js');
 
-module.exports = function (state) {
+module.exports = function (state, emit) {
     var m = router.match(state.url);
     var page = m && m.fn({
         params: m.params,
-        bus: state.bus,
         state: state
-    });
+    }, emit);
     var buttons = [
         { href: '/', text: 'log' },
         { href: '/wallets', text: 'wallets' },

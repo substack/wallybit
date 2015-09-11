@@ -11,7 +11,7 @@ router.addRoute('/', function (m) {
     ]);
 });
 
-router.addRoute('/wallets', function (m) {
+router.addRoute('/wallets', function (m, emit) {
     var wallets = m.state.wallets.map(function (wallet) {
         return h('div.wallet', [
             h('div.address', wallet.address)
@@ -30,11 +30,11 @@ router.addRoute('/wallets', function (m) {
     ]);
     
     function createWallet (ev) {
-        m.bus.emit('create-wallet');
+        emit('create-wallet');
     }
 });
 
-router.addRoute('/access', function (m) {
+router.addRoute('/access', function (m, emit) {
     var requests = m.state.requests.map(function (req) {
         return h('tr', [
             h('td.origin', req.origin),
@@ -42,10 +42,10 @@ router.addRoute('/access', function (m) {
             h('td', h('button', { onclick: approve }, 'approve'))
         ]);
         function reject (ev) {
-            m.bus.emit('reject-origin', req.origin);
+            emit('reject-origin', req.origin);
         }
         function approve (ev) {
-            m.bus.emit('approve-origin', req.origin);
+            emit('approve-origin', req.origin);
         }
     });
     return h('div', [
