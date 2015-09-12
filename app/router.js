@@ -41,7 +41,7 @@ router.addRoute('/access', function (m, emit) {
       h('td', h('button', { onclick: remove }, 'remove'))
     ])
     function remove (ev) {
-      emit('remove-access', origin)
+      emit('remove-access', x.origin)
     }
   })
   var table = h('table.access', [

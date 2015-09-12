@@ -10,51 +10,54 @@ var dex = hindex(log, idb, function (row, tx, next) {
   next()
 })
 
+var EventEmitter = require('events').EventEmitter
+var PageBus = require('page-bus')
+
+var ui = new EventEmitter
 var Box = require('../')
-var box = new Box(db)
+var box = new Box(db, { events: new PageBus })
 
 var main = require('main-loop')
 var vdom = require('virtual-dom')
 var rpc = require('hello-frame-rpc')
 
-var EventEmitter = require('events').EventEmitter
-var bus = new EventEmitter
-
-bus.on('create-wallet', function () {
-  box.createWallet(function (err, wallet) {
-    if (err) return showError(err)
-    state.wallets.push(wallet)
-    loop.update(state)
-  })
+ui.on('create-wallet', function () {
+  box.createWallet(showError)
 })
 
-bus.on('remove-access', function (origin) {
+ui.on('remove-access', function (origin) {
   box.removeAccess(origin, function (err) {
     if (err) return showError(err)
   })
 })
 
-bus.on('add-access', function (origin) {
+ui.on('add-access', function (origin) {
   rpc.connect(origin, {}, function (err) {
     if (err) return showError(err)
-    box.addAccess(origin, {}, function (err) {
-      if (err) return showError(err)
-      state.access.push({ origin: origin })
-    })
+    box.addAccess(origin, {}, showError)
   })
 })
 
-box.on('add-access', function (origin, perms) {
-  state.requests = state.requests.filter(function (req) {
-    return req.origin !== origin
-  })
-  state.approved.push({ origin: origin, permissions: perms })
+box.events.on('add-access', function (origin, perms) {
+  state.access.push({ origin: origin, permissions: perms || {} })
   loop.update(state)
 })
 
-box.on('remove-access', function (origin, req) {
-  state.requests = state.requests.filter(function (req) {
-    return req.origin !== origin
+box.events.on('remove-access', function (origin, req) {
+  state.access = state.access.filter(function (x) {
+    return x.origin !== origin
+  })
+  loop.update(state)
+})
+
+box.events.on('add-wallet', function (wallet) {
+  state.wallets.push(wallet)
+  loop.update(state)
+})
+
+box.events.on('remove-wallet', function (addr) {
+  state.wallets = state.wallets.filter(function (w) {
+    return w.address !== addr
   })
   loop.update(state)
 })
@@ -66,7 +69,7 @@ var state = {
 }
 var render = require('./render.js')
 var loop = main(state, function (state) {
-  return render(state, bus.emit.bind(bus))
+  return render(state, ui.emit.bind(ui))
 }, vdom)
 document.querySelector('#content').appendChild(loop.target)
 
@@ -101,6 +104,7 @@ box.listAccess(function (err, apps) {
 })
 
 function showError (err) {
+  if (!err) return
   state.error = err.message || String(err)
   loop.update(state)
 }

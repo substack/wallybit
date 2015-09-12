@@ -5,13 +5,12 @@ var readonly = require('read-only-stream')
 var pump = require('pump')
 
 var defined = require('defined')
-var inherits = require('inherits')
-var PageBus = require('page-bus')
 var once = require('once')
 var xtend = require('xtend')
 function noop () {}
 
 var defaults = require('levelup-defaults')
+var EventEmitter = require('events').EventEmitter
 
 var normOrigin = require('./lib/norm_origin.js')
 
@@ -19,15 +18,14 @@ var randomBytes = require('randombytes')
 function defaultRng () { return randomBytes(32) }
 
 module.exports = Box
-inherits(Box, PageBus)
 
 function Box (db, opts) {
   if (!(this instanceof Box)) return new Box(db, opts)
-  PageBus.call(this)
   if (!opts) opts = {}
   this.rng = defined(opts.rng, defaultRng)
   this.db = defaults(db, { valueEncoding: 'json' })
   this.network = defined(opts.network, bitcoin.networks.bitcoin)
+  this.events = opts.events || new EventEmitter
 }
 
 Box.prototype.addAccess = function (origin, perms, cb) {
@@ -37,7 +35,7 @@ Box.prototype.addAccess = function (origin, perms, cb) {
   self.db.put('access!' + origin, perms, function (err) {
     if (err) return cb(err)
     cb(null, perms)
-    self.emit('add-access', origin, perms)
+    self.events.emit('add-access', origin, perms)
   })
 }
 
@@ -47,7 +45,7 @@ Box.prototype.removeAccess = function (origin, cb) {
   self.db.del('access!' + origin, function (err) {
     if (err) return cb(err)
     cb(null)
-    self.emit('remove-access', origin)
+    self.events.emit('remove-access', origin)
   })
 }
 
@@ -65,25 +63,31 @@ Box.prototype.createWallet = function (opts, cb) {
     opts = {}
   }
   if (!opts) opts = {}
-
-  var keypair
-  if (opts.wif) {
-    keypair = bitcoin.ECPair.fromWIF(opts.wif)
-  }
-  else {
-    keypair = bitcoin.ECPair.makeRandom({
-      rng: defined(opts.rng, this.rng)
-    })
-  }
-
-  var addr = keypair.getAddress(this.network).toString()
+  var keypair = bitcoin.ECPair.makeRandom({
+    rng: defined(opts.rng, this.rng)
+  })
   var wif = keypair.toWIF(this.network)
+  this.addWallet(wif, cb)
+}
+
+Box.prototype.addWallet = function (wif, cb) {
+  var self = this
+  var keypair = bitcoin.ECPair.fromWIF(wif)
+  var addr = keypair.getAddress(self.network).toString()
   var rec = { address: addr, wif: wif }
   var value = { wif: wif }
+  self.db.put('wallet!' + addr, value, function (err) {
+    if (err) return cb(err)
+    cb(null, rec)
+    self.events.emit('add-wallet', rec)
+  })
+}
 
-  this.db.put('wallet!' + addr, value, function (err) {
-    if (err) cb(err)
-    else cb(null, rec)
+Box.prototype.removeWallet = function (addr, cb) {
+  self.db.del('wallet!' + addr, function (err) {
+    if (err) return cb(err)
+    cb(null, rec)
+    self.events.emit('remove-wallet', rec)
   })
 }
 
