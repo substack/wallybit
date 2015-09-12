@@ -15,6 +15,7 @@ var box = new Box(db)
 
 var main = require('main-loop')
 var vdom = require('virtual-dom')
+var rpc = require('hello-frame-rpc')
 
 var EventEmitter = require('events').EventEmitter
 var bus = new EventEmitter
@@ -34,8 +35,12 @@ bus.on('remove-access', function (origin) {
 })
 
 bus.on('add-access', function (origin) {
-  box.addAccess(origin, {}, function (err) {
+  rpc.connect(origin, {}, function (err) {
     if (err) return showError(err)
+    box.addAccess(origin, {}, function (err) {
+      if (err) return showError(err)
+      state.access.push({ origin: origin })
+    })
   })
 })
 

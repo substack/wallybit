@@ -35,30 +35,47 @@ router.addRoute('/wallets', function (m, emit) {
 })
 
 router.addRoute('/access', function (m, emit) {
-  var requests = m.state.requests.map(function (req) {
+  var apps = m.state.access.map(function (x) {
     return h('tr', [
-      h('td.origin', req.origin),
-      h('td', h('button', { onclick: reject }, 'reject')),
-      h('td', h('button', { onclick: approve }, 'approve'))
+      h('td.origin', x.origin),
+      h('td', h('button', { onclick: remove }, 'remove'))
     ])
-    function reject (ev) {
-      emit('reject-origin', req.origin)
-    }
-    function approve (ev) {
-      emit('approve-origin', req.origin)
+    function remove (ev) {
+      emit('remove-access', origin)
     }
   })
+  var table = h('table.access', [
+    h('tr', [
+      h('th', 'origin'),
+      h('th', 'action')
+    ])
+  ].concat(apps))
+
+  if (apps.length === 0) {
+    table = h('div.info', 'no applications have been authorized')
+  }
+
   return h('div', [
     h('h1.bar', 'access'),
-    h('div.padded', [
-      h('table.requests', [
-        h('tr', [
-          h('th', 'origin'),
-          h('th', 'action')
-        ])
-      ].concat(requests))
+    h('div.padded#access', [
+      h('form.add-access', { onsubmit: addAccess }, [
+        h('div', [
+          h('input', {
+            type: 'text',
+            name: 'origin',
+            placeholder: 'application URL'
+          }),
+          h('button', { type: 'submit' }, 'authorize application')
+        ]),
+      ]),
+      table
     ])
   ])
+
+  function addAccess (ev) {
+    ev.preventDefault()
+    emit('add-access', this.elements.origin.value)
+  }
 })
 
 router.addRoute('/send', function (m) {

@@ -35,9 +35,9 @@ Box.prototype.addAccess = function (origin, perms, cb) {
   origin = normOrigin(origin)
   if (!cb) cb = noop
   self.db.put('access!' + origin, perms, function (err) {
-      if (err) return cb(err)
-      cb(null, perms)
-      self.emit('add-access', origin, perms)
+    if (err) return cb(err)
+    cb(null, perms)
+    self.emit('add-access', origin, perms)
   })
 }
 
@@ -45,9 +45,9 @@ Box.prototype.removeAccess = function (origin, cb) {
   var self = this
   if (!cb) cb = noop
   self.db.del('access!' + origin, function (err) {
-      if (err) return cb(err)
-      cb(null)
-      self.emit('remove-access', origin)
+    if (err) return cb(err)
+    cb(null)
+    self.emit('remove-access', origin)
   })
 }
 
@@ -61,37 +61,37 @@ Box.prototype.listAccess = function (cb) {
 
 Box.prototype.createWallet = function (opts, cb) {
   if (typeof opts === 'function') {
-      cb = opts
-      opts = {}
+    cb = opts
+    opts = {}
   }
   if (!opts) opts = {}
-  
+
   var keypair
   if (opts.wif) {
-      keypair = bitcoin.ECPair.fromWIF(opts.wif)
+    keypair = bitcoin.ECPair.fromWIF(opts.wif)
   }
   else {
-      keypair = bitcoin.ECPair.makeRandom({
-          rng: defined(opts.rng, this.rng)
-      })
+    keypair = bitcoin.ECPair.makeRandom({
+      rng: defined(opts.rng, this.rng)
+    })
   }
-  
+
   var addr = keypair.getAddress(this.network).toString()
   var wif = keypair.toWIF(this.network)
   var rec = { address: addr, wif: wif }
   var value = { wif: wif }
-  
+
   this.db.put('wallet!' + addr, value, function (err) {
-      if (err) cb(err)
-      else cb(null, rec)
+    if (err) cb(err)
+    else cb(null, rec)
   })
 }
 
 Box.prototype.listWallets = function (cb) {
   return this._list('wallet', function (row) {
-      return xtend(row.value, {
-          address: row.key.split('!')[1],
-      })
+    return xtend(row.value, {
+      address: row.key.split('!')[1]
+    })
   }, cb)
 }
 
@@ -99,17 +99,17 @@ Box.prototype._list = function (key, fn, cb) {
   cb = once(cb)
   var r = this.db.createReadStream({ gt: key + '!', lt: key + '!~' })
   var results = cb ? [] : null
-  
+
   var stream = pump(r, through.obj(function (row, enc, next) {
-      var rec = fn(row)
-      if (results) results.push(rec)
-      this.push(rec)
-      next()
+    var rec = fn(row)
+    if (results) results.push(rec)
+    this.push(rec)
+    next()
   }))
   if (cb) {
-      stream.once('error', cb)
-      stream.on('end', function () { cb(null, results) })
-      process.nextTick(function () { stream.resume() })
+    stream.once('error', cb)
+    stream.on('end', function () { cb(null, results) })
+    process.nextTick(function () { stream.resume() })
   }
   return readonly(stream)
 }

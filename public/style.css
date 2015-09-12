@@ -107,12 +107,22 @@ body {
   padding: 15px;
 }
 
-table.requests th {
+#access table.access th {
   text-align: left;
+  min-width: 150px;
 }
 
-table.requests tr td.origin {
+#access table.access tr td.origin {
   background-color: yellow;
   min-width: 30ex;
   padding-right: 4ex;
+}
+
+#access form.add-access {
+  margin-bottom: 2em;
+}
+
+.info {
+  color: rgb(127,127,127);
+  font-style: italic;
 }
