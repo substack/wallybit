@@ -25,6 +25,14 @@ ui.on('create-wallet', function () {
   box.createWallet(showError)
 })
 
+ui.on('add-wallet', function (wif) {
+  box.addWallet(wif, showError)
+})
+
+ui.on('remove-wallet', function (addr) {
+  box.removeWallet(addr, showError)
+})
+
 ui.on('remove-access', function (origin) {
   box.removeAccess(origin, function (err) {
     if (err) return showError(err)

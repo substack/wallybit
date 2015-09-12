@@ -84,10 +84,11 @@ Box.prototype.addWallet = function (wif, cb) {
 }
 
 Box.prototype.removeWallet = function (addr, cb) {
+  var self = this
   self.db.del('wallet!' + addr, function (err) {
     if (err) return cb(err)
-    cb(null, rec)
-    self.events.emit('remove-wallet', rec)
+    cb(null, addr)
+    self.events.emit('remove-wallet', addr)
   })
 }
 

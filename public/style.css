@@ -100,10 +100,7 @@ body {
   padding: 1em;
 }
 
-.wallet {
-  margin-left: 15px;
-  margin-top: 5px;
-  background-color: lime;
+#wallets .wallets tr {
   padding: 15px;
 }
 
