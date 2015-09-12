@@ -36,9 +36,11 @@ module.exports = function (bus, loop) {
   bus.local.on('list-wallets', function (wallets) {
     update({ wallets: wallets })
   })
-  bus.local.on('list-acess', function (apps) {
+  bus.local.on('list-access', function (apps) {
     update({ access: apps })
   })
 
-  function update (ref) { loop.update(xtend(loop.state, ref)) }
+  function update (ref) {
+    loop.update(xtend(loop.state, ref))
+  }
 }

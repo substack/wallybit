@@ -11,6 +11,7 @@ var dex = hindex(log, idb, function (row, tx, next) {
 })
 
 var EventEmitter = require('events').EventEmitter
+var xtend = require('xtend')
 
 var ui = new EventEmitter
 var Box = require('../')
@@ -36,8 +37,7 @@ require('./events.js')(bus, loop)
 var router = require('./router.js')
 var singlePage = require('single-page')
 var showPage = singlePage(function (href) {
-  state.url = href
-  loop.update(state)
+  loop.update(xtend(loop.state, { url: href }))
 })
 var catcher = require('catch-links')
 catcher(window, showPage)

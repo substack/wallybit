@@ -102,6 +102,10 @@ body {
   padding: 15px;
 }
 
+#wallets .network {
+  font-family: monospace;
+}
+
 #access table.access th {
   text-align: left;
   min-width: 150px;

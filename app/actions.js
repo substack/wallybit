@@ -16,8 +16,8 @@ module.exports = function (ui, box) {
     else local.emit('list-access', apps)
   })
 
-  ui.on('create-wallet', function () {
-    box.createWallet(function (err, wallet) {
+  ui.on('create-wallet', function (opts) {
+    box.createWallet(opts, function (err, wallet) {
       if (err) local.emit('error', err)
       else shared.emit('add-wallet', wallet)
     })
