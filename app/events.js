@@ -1,11 +1,8 @@
 var xtend = require('xtend')
 
 module.exports = function (bus, loop) {
-  bus.shared.on('add-access', function (origin, perms) {
-    var row = { origin: origin, permissions: perms || {} }
-    update({
-      access: loop.state.access.concat(row)
-    })
+  bus.shared.on('add-access', function (host) {
+    update({ access: loop.state.access.concat(host) })
   })
 
   bus.shared.on('remove-access', function (origin) {

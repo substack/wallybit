@@ -44,12 +44,12 @@ module.exports = function (ui, box) {
     })
   })
 
-  ui.on('add-access', function (origin) {
-    rpc.connect(origin, {}, function (err) {
+  ui.on('add-access', function (host) {
+    rpc.connect(host.origin, {}, function (err) {
       if (err) return showError(err)
-      box.addAccess(origin, {}, function (err, perms) {
+      box.addAccess(host, function (err, perms) {
         if (err) local.emit('error', err)
-        else shared.emit('add-access', origin, perms)
+        else shared.emit('add-access', host)
       })
     })
   })

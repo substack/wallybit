@@ -24,13 +24,19 @@ function Box (db, opts) {
   this.db = defaults(db, { valueEncoding: 'json' })
 }
 
-Box.prototype.addAccess = function (origin, perms, cb) {
+Box.prototype.addAccess = function (opts, cb) {
   var self = this
-  origin = normOrigin(origin)
+  var origin = normOrigin(opts.origin)
   if (!cb) cb = noop
-  self.db.put('access!' + origin, perms, function (err) {
+  if (!opts.wallet) return error(cb, 'opts.wallet required')
+  var value = {
+    permissions: opts.permissions || {},
+    wallet: opts.wallet
+  }
+
+  self.db.put('access!' + origin, value, function (err) {
     if (err) cb(err)
-    else cb(null, perms)
+    else cb(null, value)
   })
 }
 
@@ -64,11 +70,11 @@ Box.prototype.createWallet = function (opts, cb) {
 Box.prototype.addWallet = function (opts, cb) {
   var self = this
   if (!cb) cb = noop
-  if (!opts || typeof opts !== 'object') return nextTick(cb, 'opts required')
-  if (!opts.wif) return nextTick(cb, 'opts.wif required')
-  if (!opts.network) return nextTick(cb, 'opts.network required')
+  if (!opts || typeof opts !== 'object') return error(cb, 'opts required')
+  if (!opts.wif) return error(cb, 'opts.wif required')
+  if (!opts.network) return error(cb, 'opts.network required')
   var network = bitcoin.networks[opts.network]
-  if (!network) return nextTick(cb, 'network not recognized')
+  if (!network) return error(cb, 'network not recognized')
 
   var keypair = bitcoin.ECPair.fromWIF(opts.wif)
   var addr = keypair.getAddress(network).toString()
@@ -130,7 +136,7 @@ Box.prototype._list = function (key, fn, cb) {
   return readonly(stream)
 }
 
-function nextTick (cb, msg) {
+function error (cb, msg) {
   var err = new Error(msg)
   process.nextTick(function () { cb(err) })
 }
