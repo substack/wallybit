@@ -32,20 +32,18 @@ body {
   font-weight: bold;
   border-width: 0px;
   border-radius: 10px;
-  text-shadow: 0px 0px 4px mediumvioletred;
-}
-
-.bar button.active {
-  background-color: lime;
+  border: 2px solid dimgrey;
 }
 
 .bar button:hover {
   background-color: hotpink;
+  cursor: pointer;
 }
 
 .bar button.active {
   background-color: lime;
-  text-shadow: 0px 0px 4px green;
+  color: black;
+  border-color: black;
 }
 
 .page .bar {
