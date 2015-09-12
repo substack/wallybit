@@ -10,8 +10,6 @@ var xtend = require('xtend')
 function noop () {}
 
 var defaults = require('levelup-defaults')
-var EventEmitter = require('events').EventEmitter
-
 var normOrigin = require('./lib/norm_origin.js')
 
 var randomBytes = require('randombytes')
@@ -25,7 +23,6 @@ function Box (db, opts) {
   this.rng = defined(opts.rng, defaultRng)
   this.db = defaults(db, { valueEncoding: 'json' })
   this.network = defined(opts.network, bitcoin.networks.bitcoin)
-  this.events = opts.events || new EventEmitter
 }
 
 Box.prototype.addAccess = function (origin, perms, cb) {
@@ -33,20 +30,15 @@ Box.prototype.addAccess = function (origin, perms, cb) {
   origin = normOrigin(origin)
   if (!cb) cb = noop
   self.db.put('access!' + origin, perms, function (err) {
-    if (err) return cb(err)
-    cb(null, perms)
-    self.events.emit('add-access', origin, perms)
+    if (err) cb(err)
+    else cb(null, perms)
   })
 }
 
 Box.prototype.removeAccess = function (origin, cb) {
   var self = this
   if (!cb) cb = noop
-  self.db.del('access!' + origin, function (err) {
-    if (err) return cb(err)
-    cb(null)
-    self.events.emit('remove-access', origin)
-  })
+  self.db.del('access!' + origin, cb)
 }
 
 Box.prototype.listAccess = function (cb) {
@@ -72,23 +64,23 @@ Box.prototype.createWallet = function (opts, cb) {
 
 Box.prototype.addWallet = function (wif, cb) {
   var self = this
+  if (!cb) cb = noop
   var keypair = bitcoin.ECPair.fromWIF(wif)
   var addr = keypair.getAddress(self.network).toString()
   var rec = { address: addr, wif: wif }
   var value = { wif: wif }
   self.db.put('wallet!' + addr, value, function (err) {
-    if (err) return cb(err)
-    cb(null, rec)
-    self.events.emit('add-wallet', rec)
+    if (err) cb(err)
+    else cb(null, rec)
   })
 }
 
 Box.prototype.removeWallet = function (addr, cb) {
   var self = this
+  if (!cb) cb = noop
   self.db.del('wallet!' + addr, function (err) {
-    if (err) return cb(err)
-    cb(null, addr)
-    self.events.emit('remove-wallet', addr)
+    if (err) cb(err)
+    else cb(null, addr)
   })
 }
 
