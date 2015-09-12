@@ -27,24 +27,19 @@ bus.on('create-wallet', function () {
   })
 })
 
-bus.on('reject-origin', function (origin) {
-  box.rejectRequest(origin, function (err) {
+bus.on('remove-access', function (origin) {
+  box.removeAccess(origin, function (err) {
     if (err) return showError(err)
   })
 })
 
-bus.on('approve-origin', function (origin) {
-  box.approveRequest(origin, function (err) {
+bus.on('add-access', function (origin) {
+  box.addAccess(origin, {}, function (err) {
     if (err) return showError(err)
   })
 })
 
-box.on('request', function (origin, req) {
-  state.requests.push(req)
-  loop.update(state)
-})
-
-box.on('approve', function (origin, perms) {
+box.on('add-access', function (origin, perms) {
   state.requests = state.requests.filter(function (req) {
     return req.origin !== origin
   })
@@ -52,7 +47,7 @@ box.on('approve', function (origin, perms) {
   loop.update(state)
 })
 
-box.on('reject', function (origin, req) {
+box.on('remove-access', function (origin, req) {
   state.requests = state.requests.filter(function (req) {
     return req.origin !== origin
   })
@@ -61,11 +56,8 @@ box.on('reject', function (origin, req) {
 
 var state = {
   url: location.pathname,
-  page: null,
   wallets: [],
-  requests: [],
-  approved: [],
-  blocked: []
+  access: []
 }
 var render = require('./render.js')
 var loop = main(state, function (state) {
@@ -86,7 +78,7 @@ var hello = require('hello-frame-rpc')
 hello.listen('*', function (rpc) {
   var methods = {}
   methods.request = function (req, cb) {
-    box.request(rpc.origin, req, cb)
+    //...
   }
   return methods
 })
@@ -97,9 +89,9 @@ box.listWallets(function (err, wallets) {
   loop.update(state)
 })
 
-box.listRequests(function (err, requests) {
+box.listAccess(function (err, apps) {
   if (err) return showError(err)
-  state.requests = requests
+  state.access = apps
   loop.update(state)
 })
 

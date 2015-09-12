@@ -30,85 +30,33 @@ function Box (db, opts) {
   this.network = defined(opts.network, bitcoin.networks.bitcoin)
 }
 
-Box.prototype.request = function (origin, req, cb) {
-  var self = this
-  origin = normOrigin(origin)
-  cb = once(cb || noop)
-  var pending = 3, results = {}
-  self.db.get('request!' + origin, onreq)
-  self.db.get('approved!' + origin, onorigin)
-  self.db.get('block!' + origin, onblock)
-  
-  function onblock (err) {
-      if (err && err.type !== 'NotFoundError') return cb(err)
-      results.block = err ? false : true
-      if (-- pending === 0) done()
-  }
-  function onorigin (err, perms) {
-      if (err && err.type !== 'NotFoundError') return cb(err)
-      results.perms = perms
-      if (-- pending === 0) done()
-  }
-  function onreq (err, req) {
-      if (err && err.type !== 'NotFoundError') return cb(err)
-      results.request = req
-      if (-- pending === 0) done()
-  }
-  function done () {
-      if (results.origin) return cb(null, results.origin)
-      else if (results.block) return cb(null, false)
-      self.db.put('request!' + origin, req, function (err) {
-          if (err) return cb(err)
-          cb(null)
-          req.origin = origin
-          self.emit('request', origin, req)
-      })
-  }
-}
-
-Box.prototype.approveRequest = function (origin, cb) {
+Box.prototype.addAccess = function (origin, perms, cb) {
   var self = this
   origin = normOrigin(origin)
   if (!cb) cb = noop
-  self.db.get('request!' + origin, function (err, perms) {
+  self.db.put('access!' + origin, perms, function (err) {
       if (err) return cb(err)
-      self.db.batch([
-          { type: 'del', key: 'request!' + origin },
-          { type: 'put', key: 'approved!' + origin, value: perms }
-      ], onbatch)
-      function onbatch (err) {
-          if (err) return cb(err)
-          cb(null, perms)
-          self.emit('approve', origin, perms)
-      }
+      cb(null, perms)
+      self.emit('add-access', origin, perms)
   })
 }
 
-Box.prototype.rejectRequest = function (origin, cb) {
+Box.prototype.removeAccess = function (origin, cb) {
   var self = this
   if (!cb) cb = noop
-  self.db.del('request!' + origin, function (err) {
+  self.db.del('access!' + origin, function (err) {
       if (err) return cb(err)
       cb(null)
-      self.emit('reject', origin)
+      self.emit('remove-access', origin)
   })
 }
 
-Box.prototype.revokeOrigin = function (origin, cb) {
-  var self = this
-  if (!cb) cb = noop
-  self.db.del('approved!' + origin, function (err) {
-      if (err) return cb(err)
-      cb(null)
-      self.emit('revoke', origin)
-  })
-}
-
-Box.prototype.blockOrigin = function (origin, cb) {
-  var self = this
-  self.db.put('blocked!' + origin, {}, function (err) {
-      cb(null)
-  })
+Box.prototype.listAccess = function (cb) {
+  return this._list('access', function (row) {
+    return xtend(row.value, {
+      origin: row.key.split('!')[1]
+    })
+  }, cb)
 }
 
 Box.prototype.createWallet = function (opts, cb) {
@@ -143,30 +91,6 @@ Box.prototype.listWallets = function (cb) {
   return this._list('wallet', function (row) {
       return xtend(row.value, {
           address: row.key.split('!')[1],
-      })
-  }, cb)
-}
-
-Box.prototype.listRequests = function (cb) {
-  return this._list('request', function (row) {
-      return xtend(row.value, {
-          origin: row.key.split('!')[1]
-      })
-  }, cb)
-}
-
-Box.prototype.listApproved = function (cb) {
-  return this._list('approved', function (row) {
-      return xtend(row.value, {
-          origin: row.key.split('!')[1]
-      })
-  }, cb)
-}
-
-Box.prototype.listBlocked = function (cb) {
-  return this._list('blocked', function (row) {
-      return xtend(row.value, {
-          origin: row.key.split('!')[1]
       })
   }, cb)
 }
