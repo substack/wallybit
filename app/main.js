@@ -1,14 +1,7 @@
-var hyperlog = require('hyperlog')
-var hindex = require('hyperlog-index')
+var normOrigin = require('../lib/norm_origin.js')
 
 var level = require('level-browserify')
 var db = level('wallybox')
-var idb = level('wallybox-index')
-
-var log = hyperlog(db)
-var dex = hindex(log, idb, function (row, tx, next) {
-  next()
-})
 
 var EventEmitter = require('events').EventEmitter
 var xtend = require('xtend')
@@ -43,11 +36,20 @@ var catcher = require('catch-links')
 catcher(window, showPage)
 
 var hello = require('hello-frame-rpc')
-hello.listen('*', function (rpc) {
-  var methods = {}
-  console.log('rpc=', rpc)
+;(function () {
+  var rpc, methods = {}
   methods.request = function (req, cb) {
-    console.log('req=', req)
+    if (!allowed()) return cb('not authorized')
+    cb(null, 'whatever')
   }
-  return methods
-})
+  hello.listen('*', methods, function (err, r) { rpc = r })
+  function allowed () {
+    var origin = normOrigin(rpc.origin)
+console.log(state.access) 
+    for (var i = 0; i < state.access.length; i++) {
+console.log('CMP', normOrigin(state.access[i].origin), origin)
+      if (normOrigin(state.access[i].origin) === origin) return true
+    }
+    return false
+  }
+})()
