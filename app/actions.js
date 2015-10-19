@@ -37,6 +37,13 @@ module.exports = function (ui, box) {
     })
   })
 
+  ui.on('download-wallet', function (wallet) {
+    var link = document.createElement('a')
+    link.download = 'wallet.wif'
+    link.href = 'data:application/octet-stream;base64,' + btoa(wallet.wif)
+    link.click()
+  })
+
   ui.on('remove-access', function (origin) {
     box.removeAccess(origin, function (err) {
       if (err) local.emit('error', err)

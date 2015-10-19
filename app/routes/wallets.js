@@ -5,9 +5,13 @@ console.log('RENDER', m.state.wallets)
     return h('tr', [
       h('td.address', wallet.address),
       h('td.network', wallet.network || '???'),
-      h('td', h('button', { onclick: remove }, 'remove'))
+      h('td', [
+        h('button', { onclick: remove }, 'remove'),
+        h('button', { onclick: download }, 'download')
+      ])
     ])
     function remove () { emit('remove-wallet', wallet.address) }
+    function download () { emit('download-wallet', wallet) }
   })
   var table = h('table.wallets', [
     h('tr', [
