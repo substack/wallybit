@@ -45,8 +45,9 @@ catcher(window, showPage)
 var hello = require('hello-frame-rpc')
 hello.listen('*', function (rpc) {
   var methods = {}
+  console.log('rpc=', rpc)
   methods.request = function (req, cb) {
-    //...
+    console.log('req=', req)
   }
   return methods
 })
