@@ -36,6 +36,7 @@
   "scripts": {
     "build": "browserify app/main.js -o public/bundle.js",
     "test": "tape test/*.js",
+    "start": "ecstatic -p 8000 public",
     "watch": "watchify app/main.js -o public/bundle.js -dv"
   },
   "repository": {
