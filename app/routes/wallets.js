@@ -1,6 +1,5 @@
 var h = require('virtual-dom/h')
 module.exports = function (m, emit) {
-console.log('RENDER', m.state.wallets)
   var wallets = m.state.wallets.map(function (wallet) {
     return h('tr', [
       h('td.address', wallet.address),

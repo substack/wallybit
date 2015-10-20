@@ -1,16 +1,19 @@
 var hello = require('hello-frame-rpc')
 var normOrigin = require('../lib/norm_origin.js')
 
-module.exports = function (state, box) {
+module.exports = function (state, bus, box) {
   var rpc, methods = {}
-  methods.request = allowed(function (req, cb) {
-    cb(null, 'whatever')
+  methods.send = allowed(function (app, dstAddr, amount, cb) {
+    box.getWallet(app.wallet, function (err, value) {
+      if (err) return cb(err)
+      //
+    })
   })
   hello.listen('*', methods, function (err, r) { rpc = r })
 
   function allowed (f) {
     return function () {
-      var args = arguments
+      var args = [].slice.call(arguments)
       var cb = typeof args[args.length-1] === 'function'
         ? args[args.length-1] : noop
 
@@ -22,15 +25,16 @@ module.exports = function (state, box) {
       } else check(state.access.length)
 
       function check (apps) {
-        if (checker(apps)) f.apply(null, args)
-        else cb('not authorized')
+        var app = find(apps)
+        if (!app) return cb('not authorized')
+        f.apply(null, [app].concat(args))
       }
-      function checker (apps) {
+      function find (apps) {
         var origin = normOrigin(rpc.origin)
         for (var i = 0; i < apps.length; i++) {
-          if (normOrigin(apps[i].origin) === origin) return true
+          if (normOrigin(apps[i].origin) === origin) return apps[i]
         }
-        return false
+        return null
       }
     }
   }

@@ -1,4 +1,5 @@
 var bitcoin = require('bitcoinjs-lib')
+var url = require('url')
 
 var through = require('through2')
 var readonly = require('read-only-stream')
@@ -22,6 +23,7 @@ function Box (db, opts) {
   if (!opts) opts = {}
   this.rng = defined(opts.rng, defaultRng)
   this.db = defaults(db, { valueEncoding: 'json' })
+  this.endpoint = opts.endpoint || location.protocol + '//' + location.host
 }
 
 Box.prototype.addAccess = function (opts, cb) {
@@ -52,6 +54,64 @@ Box.prototype.listAccess = function (cb) {
       origin: row.key.split('!')[1]
     })
   }, cb)
+}
+
+Box.prototype.send = function (srcAddr, dstAddr, amount, cb) {
+  var self = this
+  var pending = 2
+  cb = once(cb || noop)
+  var tx = new bitcoin.TransactionBuilder()
+  tx.addOutput(dstAddr, amount)
+  var keypair
+
+  this.getWallet(srcAddr, function (err, wallet) {
+    if (err) return cb(err)
+    keypair = bitcoin.ECPair.fromWIF(wallet.wif)
+    if (--pending === 0) done()
+  })
+
+  this.getLastBlock(function (err, input) {
+    if (err) return cb(err)
+    tx.addInput(input, 0)
+    if (--pending === 0) done()
+  })
+
+  function done () {
+    tx.sign(0, keypair)
+    var sig = tx.build().toHex()
+    self.sendRawTransaction(sig, cb)
+  }
+}
+
+Box.prototype.sendRawTransaction = function (sig, cb) {
+  xhr({
+    method: 'POST',
+    url: url.resolve(this.endpoint, '/sendrawtransaction'),
+    body: sig
+  }, onpost)
+  function onpost (err, res, body) {
+    if (err) cb(err)
+    else if (!/^2/.test(res.statusCode)) {
+      cb(new Error(res.statusCode + ': ' + body))
+    } else cb(null)
+  }
+}
+
+Box.prototype.getLastBlock = function (cb) {
+  xhr({
+    method: 'GET',
+    url: url.resolve(this.endpoint, '/lastblock')
+  }, onget)
+
+  function onget (err, res, body) {
+    if (err) cb(err)
+    else if (/^2/.test(res.statusCode)) {
+      body = String(body).trim()
+      if (!/^[0-9A-Fa-f]{64}$/.test(body)) {
+        cb(new Error('invalid response for /lastblock:' + body))
+      } else cb(body)
+    }
+  }
 }
 
 Box.prototype.createWallet = function (opts, cb) {
@@ -117,6 +177,13 @@ Box.prototype.listWallets = function (cb) {
   }, cb)
 }
 
+Box.prototype.getWallet = function (addr, cb) {
+  this.db.get('wallet!' + addr, function (err, row) {
+    if (err) cb(err)
+    else cb(null, xtend(row, { address: addr }))
+  })
+}
+
 Box.prototype._list = function (key, fn, cb) {
   cb = once(cb)
   var r = this.db.createReadStream({ gt: key + '!', lt: key + '!~' })
@@ -140,3 +207,5 @@ function error (cb, msg) {
   var err = new Error(msg)
   process.nextTick(function () { cb(err) })
 }
+
+function noop () {}

@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "bitcoinjs-lib": "git@github.com:bitcoinjs/bitcoinjs-lib.git",
+    "body": "^5.1.0",
     "catch-links": "^2.0.0",
     "common-blockchain": "^0.3.2",
     "defined": "^1.0.0",

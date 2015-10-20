@@ -33,4 +33,4 @@ var showPage = singlePage(function (href) {
 var catcher = require('catch-links')
 catcher(window, showPage)
 
-require('./rpc.js')(state, box)
+require('./rpc.js')(state, bus, box)
