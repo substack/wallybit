@@ -1,2 +1,3 @@
 node_modules
+example/app/bundle.js
 public/bundle.js
