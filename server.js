@@ -5,6 +5,8 @@ var path = require('path')
 var ecstatic = require('ecstatic')
 var st = ecstatic(path.join(__dirname, 'public'))
 
+var pw = process.argv[2]
+
 var server = http.createServer(function (req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Headers',
