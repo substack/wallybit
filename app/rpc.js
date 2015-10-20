@@ -4,9 +4,9 @@ var normOrigin = require('../lib/norm_origin.js')
 module.exports = function (state, bus, box) {
   var rpc, methods = {}
   methods.send = allowed(function (app, dstAddr, amount, cb) {
-    box.getWallet(app.wallet, function (err, value) {
-      if (err) return cb(err)
-      //
+    box.send(app.wallet, dstAddr, amount, function (err) {
+      if (err) cb(err)
+      else cb(null)
     })
   })
   hello.listen('*', methods, function (err, r) { rpc = r })
